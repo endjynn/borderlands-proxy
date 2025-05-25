@@ -1,0 +1,59 @@
+* Script Internal Version: LOADER-DISCOVERY-V1.3.0
+* Purpose: Correct sxe gp. Set SWBP on game RVA 0x1F6B80 with simple ".break".
+* Focus: Confirm if RVA 0x1F6B80 is executed by forcing a debugger break.
+
+.echo [LOADER] LOADER-DISCOVERY-V1.3.0: Starting script.
+
+* Enable break on First-Chance General Protection Fault (corrected alias)
+.echo [LOADER] Enabling break on first-chance GP (sxe gp)...
+sxe gp
+.echo [LOADER] Break on first-chance GP 'sxe gp' command executed.
+
+* Clear all existing breakpoints
+.echo [LOADER] Clearing all breakpoints (bc *)...
+bc *
+.echo [LOADER] All breakpoints cleared.
+
+* Load the JavaScript extension (JS-DISCOVERY-V1.2.6)
+.scriptload C:\Temp\windbg\bl_discovery_script.js
+.echo [LOADER] JS script load attempted.
+
+* Verify JS script loaded
+.echo [LOADER] Calling JS: initialize_DiscoveryFramework...
+dx @$scriptContents.initialize_DiscoveryFramework()
+.echo [LOADER] JS: initialize_DiscoveryFramework call complete.
+
+* Get the base address of BorderlandsGOTY.exe and store it in $t0
+r $t0 = 0
+r $t0 = BorderlandsGOTY
+.echo [LOADER] Attempting to get module base for BorderlandsGOTY.exe.
+
+.echo [LOADER] Value of $t0 (BorderlandsGOTY.exe base):
+r? $t0
+
+* --- SOFTWARE Breakpoint at start of WSOEx setup block ---
+.echo [LOADER] Setting SOFTWARE BP (bp) on game RVA 0x1F6B80 ('add dword ptr [rbp+0Dh],esi')...
+* This SWBP will use the command ".break" to halt. Should be ID 0.
+bp $t0+0x1F6B80 ".break"
+.echo [LOADER] SWBP on $t0+0x1F6B80 set with '.break' command. (ID should be 0)
+
+* --- Optional: Disabled SWBP on KERNELBASE!WaitForSingleObjectEx for cross-reference ---
+.echo [LOADER] Setting (and disabling) SWBP on KERNELBASE!WaitForSingleObjectEx...
+* This should now be breakpoint ID 1. It MUST be disabled.
+bp KERNELBASE!WaitForSingleObjectEx "dx @$scriptContents.checkWaitCallForWSOEx(); gc"
+bd 1
+.echo [LOADER] SWBP on KERNELBASE!WaitForSingleObjectEx (ID 1) set and disabled.
+
+.echo [LOADER] Listing breakpoints (bl):
+bl
+
+.echo [LOADER] LOADER-DISCOVERY-V1.3.0: Script finished.
+.echo [LOADER] --- VERIFICATION & ACTION REQUIRED ---
+.echo [LOADER] 1. Review output. 'sxe gp' should not error. NO SCRIPT SYNTAX ERRORS expected.
+.echo [LOADER] 2. Examine 'bl' output. Confirm SWBP 0 ($t0+0x1F6B80) is ENABLED (e) with command ".break".
+.echo [LOADER] 3. Confirm SWBP 1 (KERNELBASE!WaitForSingleObjectEx) IS DISABLED (d).
+.echo [LOADER] 4. If these conditions are met, type 'g' to continue game execution.
+.echo [LOADER] 5. Attempt to quit the game. 
+.echo [LOADER]    IF BP 0 HITS: WinDbg will break with a prompt. Execute 'kc10', 'r', then the stepping sequence from JS function onEarlyWsoExBlockHit.
+.echo [LOADER]    IF A GPF HITS FIRST: WinDbg should break. Examine 'k', 'r', and faulting address.
+.echo [LOADER]    IF GAME EXITS CLEANLY (AGAIN): This is strong Heisenbug confirmation for SWBP at 0x1F6B80.
