@@ -1,4 +1,4 @@
-# Borderlands GOTY Enhanced - Exit Hang Fix (version.dll proxy)
+# Borderlands GOTY Enhanced - Exit Hang Fix
 
 A `version.dll` proxy for Borderlands GOTY Enhanced (x64) that resolves a common game hang issue occurring upon exit.
 
@@ -21,4 +21,4 @@ Ensure it's in the same directory as `BorderlandsGOTY.exe`.
 
 ---
 
-*A more detailed explanation of the issue, debugging process, and solution is available in `DETAILED_SUMMARY.md` (you'll need to create this file).*
+*A more detailed explanation of the issue is available in [DETAILED_SUMMARY.md](DETAILED_SUMMARY.md).*
