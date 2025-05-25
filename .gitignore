@@ -1,0 +1,12 @@
+# JetBrains - workspace
+/.idea/workspace.xml
+
+# JetBrains - httpRequest
+/.idea/httpRequests
+
+# JetBrains - dataSources
+/.idea/dataSources
+
+# CMake
+/cmake-build-debug
+/cmake-build-release
