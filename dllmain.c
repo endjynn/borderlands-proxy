@@ -2,7 +2,7 @@
 // Version: 5.0.1 - WSOEx Timeout Patch
 
 // Define this macro to enable detailed file logging.
-#define PROXY_DEBUG_LOGGING
+// #define PROXY_DEBUG_LOGGING
 
 #include <windows.h>
 #include <stdio.h>  // For wsprintfA (used in FileLog)
@@ -10,7 +10,7 @@
 #include "MinHook.h" // MinHook API
 
 // --- Globals for Real version.dll Function Pointers ---
-static HMODULE g_hRealVersionDll = NULL;
+static HMODULE g_hRealVersionDll = nullptr;
 
 // Typedefs for all 17 original VerQueryValue functions
 typedef WINBOOL (WINAPI *tGetFileVersionInfoA)(LPCSTR, DWORD, DWORD, LPVOID);
@@ -32,39 +32,39 @@ typedef BOOL (WINAPI *tVerQueryValueA)(LPCVOID, LPCSTR, LPVOID *, PUINT);
 typedef BOOL (WINAPI *tVerQueryValueW)(LPCVOID, LPCWSTR, LPVOID *, PUINT);
 
 // Pointers to original functions
-static tGetFileVersionInfoA oGetFileVersionInfoA = NULL;
-static tGetFileVersionInfoByHandle oGetFileVersionInfoByHandle = NULL;
-static tGetFileVersionInfoExA oGetFileVersionInfoExA = NULL;
-static tGetFileVersionInfoExW oGetFileVersionInfoExW = NULL;
-static tGetFileVersionInfoSizeA oGetFileVersionInfoSizeA = NULL;
-static tGetFileVersionInfoSizeExA oGetFileVersionInfoSizeExA = NULL;
-static tGetFileVersionInfoSizeExW oGetFileVersionInfoSizeExW = NULL;
-static tGetFileVersionInfoSizeW oGetFileVersionInfoSizeW = NULL;
-static tGetFileVersionInfoW oGetFileVersionInfoW = NULL;
-static tVerFindFileA oVerFindFileA = NULL;
-static tVerFindFileW oVerFindFileW = NULL;
-static tVerInstallFileA oVerInstallFileA = NULL;
-static tVerInstallFileW oVerInstallFileW = NULL;
-static tVerLanguageNameA oVerLanguageNameA = NULL;
-static tVerLanguageNameW oVerLanguageNameW = NULL;
-static tVerQueryValueA oVerQueryValueA = NULL;
-static tVerQueryValueW oVerQueryValueW = NULL;
+static tGetFileVersionInfoA oGetFileVersionInfoA = nullptr;
+static tGetFileVersionInfoByHandle oGetFileVersionInfoByHandle = nullptr;
+static tGetFileVersionInfoExA oGetFileVersionInfoExA = nullptr;
+static tGetFileVersionInfoExW oGetFileVersionInfoExW = nullptr;
+static tGetFileVersionInfoSizeA oGetFileVersionInfoSizeA = nullptr;
+static tGetFileVersionInfoSizeExA oGetFileVersionInfoSizeExA = nullptr;
+static tGetFileVersionInfoSizeExW oGetFileVersionInfoSizeExW = nullptr;
+static tGetFileVersionInfoSizeW oGetFileVersionInfoSizeW = nullptr;
+static tGetFileVersionInfoW oGetFileVersionInfoW = nullptr;
+static tVerFindFileA oVerFindFileA = nullptr;
+static tVerFindFileW oVerFindFileW = nullptr;
+static tVerInstallFileA oVerInstallFileA = nullptr;
+static tVerInstallFileW oVerInstallFileW = nullptr;
+static tVerLanguageNameA oVerLanguageNameA = nullptr;
+static tVerLanguageNameW oVerLanguageNameW = nullptr;
+static tVerQueryValueA oVerQueryValueA = nullptr;
+static tVerQueryValueW oVerQueryValueW = nullptr;
 
 // --- MinHook Related Globals & Definitions ---
 typedef DWORD (WINAPI *tWaitForSingleObjectEx)(HANDLE hHandle, DWORD dwMilliseconds, BOOL bAlertable);
 
-static tWaitForSingleObjectEx pfnOriginalWaitForSingleObjectEx = NULL; // Original WSOEx
+static tWaitForSingleObjectEx pfnOriginalWaitForSingleObjectEx = nullptr; // Original WSOEx
 static uintptr_t g_gameModuleBase = 0; // Base address of BorderlandsGOTY.exe
 // RVA of the instruction *after* the problematic 'call KERNELBASE!WaitForSingleObjectEx'
 // The call itself is at RVA_MainThread_WSOEx_ReturnSite - call_instruction_size (e.g., -6 for FF15 IAT call)
-static const uintptr_t RVA_MainThread_WSOEx_ReturnSite = 0x1F6B90;
-static const DWORD PATCHED_TIMEOUT_MS = 1; // Timeout to apply for the fix
+static constexpr uintptr_t RVA_MainThread_WSOEx_ReturnSite = 0x1F6B90;
+static constexpr DWORD PATCHED_TIMEOUT_MS = 1; // Timeout to apply for the fix
 
 // --- Utility Functions ---
 #ifdef PROXY_DEBUG_LOGGING
 static void FileLog(const char* message) {
     // Simple logging to a file. Consider making the path configurable or disabling in release builds.
-    WCHAR logPath[] = L"C:\\temp\\borderlands_proxy_log.txt"; // Consolidated log file name
+    const WCHAR logPath[] = L"C:\\temp\\borderlands_proxy_log.txt"; // Consolidated log file name
     HANDLE hFile = CreateFileW(logPath, FILE_APPEND_DATA, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         SYSTEMTIME st;
@@ -78,7 +78,7 @@ static void FileLog(const char* message) {
         lstrcpyA(fullMessage, timeBuf);
         lstrcatA(fullMessage, message);
         lstrcatA(fullMessage, "\r\n");
-        WriteFile(hFile, fullMessage, lstrlenA(fullMessage), &bytesWritten, NULL);
+        WriteFile(hFile, fullMessage, lstrlenA(fullMessage), &bytesWritten, nullptr);
         CloseHandle(hFile);
     }
 }
@@ -159,7 +159,7 @@ BOOL LoadOriginalVersionDll() {
         // Example check
         FileLog("Error: Failed to get one or more GetProcAddress for version.dll functions."); // This will compile out
         FreeLibrary(g_hRealVersionDll);
-        g_hRealVersionDll = NULL;
+        g_hRealVersionDll = nullptr;
         return FALSE;
     }
     return TRUE;
@@ -176,7 +176,7 @@ BOOL InitializeHooks() {
     g_gameModuleBase = (uintptr_t) GetModuleHandleW(L"BorderlandsGOTY.exe");
     if (!g_gameModuleBase) {
         // Fallback if specific name fails, though less reliable if multiple .exes
-        g_gameModuleBase = (uintptr_t) GetModuleHandleW(NULL);
+        g_gameModuleBase = (uintptr_t) GetModuleHandleW(nullptr);
     }
     if (!g_gameModuleBase) {
         FileLog("InitializeHooks: CRITICAL Error! Game module base not found."); // This will compile out
@@ -262,7 +262,7 @@ void UninitializeHooks() {
 
     if (g_hRealVersionDll) {
         FreeLibrary(g_hRealVersionDll);
-        g_hRealVersionDll = NULL;
+        g_hRealVersionDll = nullptr;
         FileLog("UninitializeHooks: Real version.dll freed.");
     }
 
@@ -285,6 +285,14 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
         case DLL_THREAD_ATTACH:
         case DLL_THREAD_DETACH:
             // Do nothing for thread attach/detach
+            break;
+        default:
+            // Handle any other unexpected reasons
+#ifdef PROXY_DEBUG_LOGGING
+            char logBuffer[128];
+            wsprintfA(logBuffer, "DllMain: Unhandled ul_reason_for_call: %lu", ul_reason_for_call);
+            FileLog(logBuffer);
+#endif
             break;
     }
     return TRUE;
