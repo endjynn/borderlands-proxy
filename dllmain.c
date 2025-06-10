@@ -14,21 +14,37 @@ static HMODULE g_hRealVersionDll = nullptr;
 
 // Typedefs for all 17 original VerQueryValue functions
 typedef WINBOOL (WINAPI *tGetFileVersionInfoA)(LPCSTR, DWORD, DWORD, LPVOID);
+
 typedef BOOL (WINAPI *tGetFileVersionInfoByHandle)(DWORD, LPCWSTR, DWORD, DWORD, LPVOID);
+
 typedef BOOL (WINAPI *tGetFileVersionInfoExA)(DWORD, LPCSTR, DWORD, DWORD, LPVOID);
+
 typedef BOOL (WINAPI *tGetFileVersionInfoExW)(DWORD, LPCWSTR, DWORD, DWORD, LPVOID);
+
 typedef DWORD (WINAPI *tGetFileVersionInfoSizeA)(LPCSTR, LPDWORD);
+
 typedef DWORD (WINAPI *tGetFileVersionInfoSizeExA)(DWORD, LPCSTR, LPDWORD);
+
 typedef DWORD (WINAPI *tGetFileVersionInfoSizeExW)(DWORD, LPCWSTR, LPDWORD);
+
 typedef DWORD (WINAPI *tGetFileVersionInfoSizeW)(LPCWSTR, LPDWORD);
+
 typedef WINBOOL (WINAPI *tGetFileVersionInfoW)(LPCWSTR, DWORD, DWORD, LPVOID);
+
 typedef DWORD (WINAPI *tVerFindFileA)(DWORD, LPSTR, LPSTR, LPSTR, LPSTR, PUINT, LPSTR, PUINT);
+
 typedef DWORD (WINAPI *tVerFindFileW)(DWORD, LPWSTR, LPWSTR, LPWSTR, LPWSTR, PUINT, LPWSTR, PUINT);
+
 typedef DWORD (WINAPI *tVerInstallFileA)(DWORD, LPSTR, LPSTR, LPSTR, LPSTR, LPSTR, LPSTR, PUINT);
+
 typedef DWORD (WINAPI *tVerInstallFileW)(DWORD, LPWSTR, LPWSTR, LPWSTR, LPWSTR, LPWSTR, LPWSTR, PUINT);
+
 typedef DWORD (WINAPI *tVerLanguageNameA)(DWORD, LPSTR, DWORD);
+
 typedef DWORD (WINAPI *tVerLanguageNameW)(DWORD, LPWSTR, DWORD);
+
 typedef BOOL (WINAPI *tVerQueryValueA)(LPCVOID, LPCSTR, LPVOID *, PUINT);
+
 typedef BOOL (WINAPI *tVerQueryValueW)(LPCVOID, LPCWSTR, LPVOID *, PUINT);
 
 // Pointers to original functions
@@ -63,7 +79,7 @@ static constexpr DWORD PATCHED_TIMEOUT_MS = 1; // Timeout to apply for the fix
 // --- Utility Functions ---
 #ifdef PROXY_DEBUG_LOGGING
 static void FileLog(const char* message) {
-    // Simple logging to a file. Consider making the path configurable or disabling in release builds.
+    // Simple logging to a file. Consider making the path configurable or disabling it in release builds.
     const WCHAR logPath[] = L"C:\\temp\\borderlands_proxy_log.txt"; // Consolidated log file name
     HANDLE hFile = CreateFileW(logPath, FILE_APPEND_DATA, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -114,7 +130,7 @@ DWORD WINAPI DetourWaitForSingleObjectEx_ApplyFix(HANDLE hHandle, DWORD dwMillis
             }
         }
     }
-    // Call the original function with potentially modified timeout
+    // Call the original function with a potentially modified timeout
     return pfnOriginalWaitForSingleObjectEx(hHandle, new_dwMilliseconds, bAlertable);
 }
 
@@ -125,6 +141,7 @@ BOOL LoadOriginalVersionDll() {
         FileLog("Error: GetSystemDirectoryW failed."); // This will compile out if PROXY_DEBUG_LOGGING is not defined
         return FALSE;
     }
+
     lstrcatW(systemPath, L"\\version.dll");
     g_hRealVersionDll = LoadLibraryW(systemPath);
     if (!g_hRealVersionDll) {
@@ -134,15 +151,12 @@ BOOL LoadOriginalVersionDll() {
 
     // Get addresses of all original functions
     oGetFileVersionInfoA = (tGetFileVersionInfoA) GetProcAddress(g_hRealVersionDll, "GetFileVersionInfoA");
-    oGetFileVersionInfoByHandle = (tGetFileVersionInfoByHandle) GetProcAddress(
-        g_hRealVersionDll, "GetFileVersionInfoByHandle"); // Keep if it was intended, though non-standard.
+    oGetFileVersionInfoByHandle = (tGetFileVersionInfoByHandle) GetProcAddress(g_hRealVersionDll, "GetFileVersionInfoByHandle"); // Keep if it was intended, though non-standard.
     oGetFileVersionInfoExA = (tGetFileVersionInfoExA) GetProcAddress(g_hRealVersionDll, "GetFileVersionInfoExA");
     oGetFileVersionInfoExW = (tGetFileVersionInfoExW) GetProcAddress(g_hRealVersionDll, "GetFileVersionInfoExW");
     oGetFileVersionInfoSizeA = (tGetFileVersionInfoSizeA) GetProcAddress(g_hRealVersionDll, "GetFileVersionInfoSizeA");
-    oGetFileVersionInfoSizeExA = (tGetFileVersionInfoSizeExA) GetProcAddress(
-        g_hRealVersionDll, "GetFileVersionInfoSizeExA");
-    oGetFileVersionInfoSizeExW = (tGetFileVersionInfoSizeExW) GetProcAddress(
-        g_hRealVersionDll, "GetFileVersionInfoSizeExW");
+    oGetFileVersionInfoSizeExA = (tGetFileVersionInfoSizeExA) GetProcAddress(g_hRealVersionDll, "GetFileVersionInfoSizeExA");
+    oGetFileVersionInfoSizeExW = (tGetFileVersionInfoSizeExW) GetProcAddress(g_hRealVersionDll, "GetFileVersionInfoSizeExW");
     oGetFileVersionInfoSizeW = (tGetFileVersionInfoSizeW) GetProcAddress(g_hRealVersionDll, "GetFileVersionInfoSizeW");
     oGetFileVersionInfoW = (tGetFileVersionInfoW) GetProcAddress(g_hRealVersionDll, "GetFileVersionInfoW");
     oVerFindFileA = (tVerFindFileA) GetProcAddress(g_hRealVersionDll, "VerFindFileA");
@@ -162,22 +176,23 @@ BOOL LoadOriginalVersionDll() {
         g_hRealVersionDll = nullptr;
         return FALSE;
     }
+
     return TRUE;
 }
 
 BOOL InitializeHooks() {
     FileLog("InitializeHooks: Starting initialization (v5.0.1)."); // This will compile out
-
     if (!LoadOriginalVersionDll()) {
         return FALSE; // Error logged in LoadOriginalVersionDll
     }
-    FileLog("InitializeHooks: Real version.dll functions mapped."); // This will compile out
 
+    FileLog("InitializeHooks: Real version.dll functions mapped."); // This will compile out
     g_gameModuleBase = (uintptr_t) GetModuleHandleW(L"BorderlandsGOTY.exe");
     if (!g_gameModuleBase) {
-        // Fallback if specific name fails, though less reliable if multiple .exes
+        // Fallback if a specific name fails, though less reliable if multiple .exes
         g_gameModuleBase = (uintptr_t) GetModuleHandleW(nullptr);
     }
+
     if (!g_gameModuleBase) {
         FileLog("InitializeHooks: CRITICAL Error! Game module base not found."); // This will compile out
         return FALSE;
@@ -192,31 +207,33 @@ BOOL InitializeHooks() {
         FileLog("InitializeHooks: MH_Initialize failed."); // This will compile out
         return FALSE;
     }
-    FileLog("InitializeHooks: MinHook initialized."); // This will compile out
 
+    FileLog("InitializeHooks: MinHook initialized."); // This will compile out
     LPVOID pTargetWSOEx = GetProcAddress(GetModuleHandleW(L"KernelBase.dll"), "WaitForSingleObjectEx");
     if (!pTargetWSOEx) {
         // Fallback for older systems if KernelBase.dll doesn't have it (unlikely for modern Windows)
         pTargetWSOEx = GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "WaitForSingleObjectEx");
     }
+
     if (!pTargetWSOEx) {
         FileLog("InitializeHooks: Failed to get address of WaitForSingleObjectEx."); // This will compile out
         MH_Uninitialize();
         return FALSE;
     }
 
-    if (MH_CreateHook(pTargetWSOEx, &DetourWaitForSingleObjectEx_ApplyFix,
-                      (LPVOID *) &pfnOriginalWaitForSingleObjectEx) != MH_OK) {
+    if (MH_CreateHook(pTargetWSOEx, &DetourWaitForSingleObjectEx_ApplyFix, (LPVOID *) &pfnOriginalWaitForSingleObjectEx) != MH_OK) {
         FileLog("InitializeHooks: MH_CreateHook for WaitForSingleObjectEx failed."); // This will compile out
         MH_Uninitialize();
         return FALSE;
     }
+
     if (MH_EnableHook(pTargetWSOEx) != MH_OK) {
         FileLog("InitializeHooks: MH_EnableHook for WaitForSingleObjectEx failed."); // This will compile out
-        MH_RemoveHook(pTargetWSOEx); // Attempt to clean up partial hook
+        MH_RemoveHook(pTargetWSOEx); // Attempt to clean up a partial hook
         MH_Uninitialize();
         return FALSE;
     }
+
     FileLog("InitializeHooks: WaitForSingleObjectEx hook enabled and patch active."); // This will compile out
     FileLog("InitializeHooks: Initialization successful."); // This will compile out
     return TRUE;
@@ -224,7 +241,7 @@ BOOL InitializeHooks() {
 
 void UninitializeHooks() {
     FileLog("UninitializeHooks: Starting uninitialization.");
-    LPVOID pTargetWSOEx = NULL; // Function-scoped variable, as in original
+    LPVOID pTargetWSOEx = NULL; // Function-scoped variable, as in the original
 
     // Log if the hook was never properly set up.
     if (!pfnOriginalWaitForSingleObjectEx) {
@@ -235,7 +252,9 @@ void UninitializeHooks() {
     if (pfnOriginalWaitForSingleObjectEx) {
         // Attempt to get the address of the function we hooked.
         pTargetWSOEx = GetProcAddress(GetModuleHandleW(L"KernelBase.dll"), "WaitForSingleObjectEx");
-        if (!pTargetWSOEx) { // Fallback
+
+        if (!pTargetWSOEx) {
+            // Fallback
             pTargetWSOEx = GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "WaitForSingleObjectEx");
         }
 
@@ -257,7 +276,8 @@ void UninitializeHooks() {
     if (MH_Uninitialize() == MH_OK) {
         FileLog("UninitializeHooks: MinHook uninitialized successfully.");
     } else {
-        FileLog("UninitializeHooks: MH_Uninitialize reported an issue (e.g., not initialized or already uninitialized).");
+        FileLog(
+            "UninitializeHooks: MH_Uninitialize reported an issue (e.g., not initialized or already uninitialized).");
     }
 
     if (g_hRealVersionDll) {
@@ -304,122 +324,194 @@ extern "C" {
 #endif
 
 WINBOOL WINAPI GetFileVersionInfoA(LPCSTR lptstrFilename, DWORD dwHandle, DWORD dwLen, LPVOID lpData) {
-    if (oGetFileVersionInfoA) return oGetFileVersionInfoA(lptstrFilename, dwHandle, dwLen, lpData);
+    if (oGetFileVersionInfoA) {
+        return oGetFileVersionInfoA(lptstrFilename, dwHandle, dwLen, lpData);
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return FALSE;
 }
 
-BOOL WINAPI GetFileVersionInfoByHandle(DWORD dwFlags, LPCWSTR lpszFileName, DWORD dwHandle, DWORD dwLen,
-                                       LPVOID lpData) {
-    if (oGetFileVersionInfoByHandle) return oGetFileVersionInfoByHandle(dwFlags, lpszFileName, dwHandle, dwLen, lpData);
+BOOL WINAPI GetFileVersionInfoByHandle(DWORD dwFlags, LPCWSTR lpszFileName, DWORD dwHandle, DWORD dwLen, LPVOID lpData) {
+    if (oGetFileVersionInfoByHandle) {
+        return oGetFileVersionInfoByHandle(dwFlags, lpszFileName, dwHandle, dwLen, lpData);
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return FALSE;
 }
 
 BOOL WINAPI GetFileVersionInfoExA(DWORD dwFlags, LPCSTR lpszFileName, DWORD dwHandle, DWORD dwLen, LPVOID lpData) {
-    if (oGetFileVersionInfoExA) return oGetFileVersionInfoExA(dwFlags, lpszFileName, dwHandle, dwLen, lpData);
+    if (oGetFileVersionInfoExA) {
+        return oGetFileVersionInfoExA(dwFlags, lpszFileName, dwHandle, dwLen, lpData);
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return FALSE;
 }
 
 BOOL WINAPI GetFileVersionInfoExW(DWORD dwFlags, LPCWSTR lpszFileName, DWORD dwHandle, DWORD dwLen, LPVOID lpData) {
-    if (oGetFileVersionInfoExW) return oGetFileVersionInfoExW(dwFlags, lpszFileName, dwHandle, dwLen, lpData);
+    if (oGetFileVersionInfoExW) {
+        return oGetFileVersionInfoExW(dwFlags, lpszFileName, dwHandle, dwLen, lpData);
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return FALSE;
 }
 
 DWORD WINAPI GetFileVersionInfoSizeA(LPCSTR lptstrFilename, LPDWORD lpdwHandle) {
-    if (oGetFileVersionInfoSizeA) return oGetFileVersionInfoSizeA(lptstrFilename, lpdwHandle);
-    if (lpdwHandle) *lpdwHandle = 0;
+    if (oGetFileVersionInfoSizeA) {
+        return oGetFileVersionInfoSizeA(lptstrFilename, lpdwHandle);
+    }
+
+    if (lpdwHandle) {
+        *lpdwHandle = 0;
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return 0;
 }
 
 DWORD WINAPI GetFileVersionInfoSizeExA(DWORD dwFlags, LPCSTR lpszFileName, LPDWORD lpdwHandle) {
-    if (oGetFileVersionInfoSizeExA) return oGetFileVersionInfoSizeExA(dwFlags, lpszFileName, lpdwHandle);
-    if (lpdwHandle) *lpdwHandle = 0;
+    if (oGetFileVersionInfoSizeExA) {
+        return oGetFileVersionInfoSizeExA(dwFlags, lpszFileName, lpdwHandle);
+    }
+
+    if (lpdwHandle) {
+        *lpdwHandle = 0;
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return 0;
 }
 
 DWORD WINAPI GetFileVersionInfoSizeExW(DWORD dwFlags, LPCWSTR lpszFileName, LPDWORD lpdwHandle) {
-    if (oGetFileVersionInfoSizeExW) return oGetFileVersionInfoSizeExW(dwFlags, lpszFileName, lpdwHandle);
-    if (lpdwHandle) *lpdwHandle = 0;
+    if (oGetFileVersionInfoSizeExW) {
+        return oGetFileVersionInfoSizeExW(dwFlags, lpszFileName, lpdwHandle);
+    }
+
+    if (lpdwHandle) {
+        *lpdwHandle = 0;
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return 0;
 }
 
 DWORD WINAPI GetFileVersionInfoSizeW(LPCWSTR lptstrFilename, LPDWORD lpdwHandle) {
-    if (oGetFileVersionInfoSizeW) return oGetFileVersionInfoSizeW(lptstrFilename, lpdwHandle);
-    if (lpdwHandle) *lpdwHandle = 0;
+    if (oGetFileVersionInfoSizeW) {
+        return oGetFileVersionInfoSizeW(lptstrFilename, lpdwHandle);
+    }
+
+    if (lpdwHandle) {
+        *lpdwHandle = 0;
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return 0;
 }
 
 WINBOOL WINAPI GetFileVersionInfoW(LPCWSTR lptstrFilename, DWORD dwHandle, DWORD dwLen, LPVOID lpData) {
-    if (oGetFileVersionInfoW) return oGetFileVersionInfoW(lptstrFilename, dwHandle, dwLen, lpData);
+    if (oGetFileVersionInfoW) {
+        return oGetFileVersionInfoW(lptstrFilename, dwHandle, dwLen, lpData);
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return FALSE;
 }
 
-DWORD WINAPI VerFindFileA(DWORD uFlags, LPSTR szFileName, LPSTR szWinDir, LPSTR szAppDir, LPSTR szCurDir,
-                          PUINT lpuCurDirLen, LPSTR szDestDir, PUINT lpuDestDirLen) {
-    if (oVerFindFileA) return oVerFindFileA(uFlags, szFileName, szWinDir, szAppDir, szCurDir, lpuCurDirLen, szDestDir,
-                                            lpuDestDirLen);
+DWORD WINAPI VerFindFileA(DWORD uFlags, LPSTR szFileName, LPSTR szWinDir, LPSTR szAppDir, LPSTR szCurDir, PUINT lpuCurDirLen, LPSTR szDestDir, PUINT lpuDestDirLen) {
+    if (oVerFindFileA) {
+        return oVerFindFileA(uFlags, szFileName, szWinDir, szAppDir, szCurDir, lpuCurDirLen, szDestDir, lpuDestDirLen);
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return 0;
 }
 
-DWORD WINAPI VerFindFileW(DWORD uFlags, LPWSTR szFileName, LPWSTR szWinDir, LPWSTR szAppDir, LPWSTR szCurDir,
-                          PUINT lpuCurDirLen, LPWSTR szDestDir, PUINT lpuDestDirLen) {
-    if (oVerFindFileW) return oVerFindFileW(uFlags, szFileName, szWinDir, szAppDir, szCurDir, lpuCurDirLen, szDestDir,
-                                            lpuDestDirLen);
+DWORD WINAPI VerFindFileW(DWORD uFlags, LPWSTR szFileName, LPWSTR szWinDir, LPWSTR szAppDir, LPWSTR szCurDir, PUINT lpuCurDirLen, LPWSTR szDestDir, PUINT lpuDestDirLen) {
+    if (oVerFindFileW) {
+        return oVerFindFileW(uFlags, szFileName, szWinDir, szAppDir, szCurDir, lpuCurDirLen, szDestDir, lpuDestDirLen);
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return 0;
 }
 
-DWORD WINAPI VerInstallFileA(DWORD uFlags, LPSTR szSrcFileName, LPSTR szDestFileName, LPSTR szSrcDir, LPSTR szDestDir,
-                             LPSTR szCurDir, LPSTR szTmpFile, PUINT lpuTmpFileLen) {
-    if (oVerInstallFileA) return oVerInstallFileA(uFlags, szSrcFileName, szDestFileName, szSrcDir, szDestDir, szCurDir,
-                                                  szTmpFile, lpuTmpFileLen);
+DWORD WINAPI VerInstallFileA(DWORD uFlags, LPSTR szSrcFileName, LPSTR szDestFileName, LPSTR szSrcDir, LPSTR szDestDir, LPSTR szCurDir, LPSTR szTmpFile, PUINT lpuTmpFileLen) {
+    if (oVerInstallFileA) {
+        return oVerInstallFileA(uFlags, szSrcFileName, szDestFileName, szSrcDir, szDestDir, szCurDir, szTmpFile, lpuTmpFileLen);
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return 0;
 }
 
-DWORD WINAPI VerInstallFileW(DWORD uFlags, LPWSTR szSrcFileName, LPWSTR szDestFileName, LPWSTR szSrcDir,
-                             LPWSTR szDestDir, LPWSTR szCurDir, LPWSTR szTmpFile, PUINT lpuTmpFileLen) {
-    if (oVerInstallFileW) return oVerInstallFileW(uFlags, szSrcFileName, szDestFileName, szSrcDir, szDestDir, szCurDir,
-                                                  szTmpFile, lpuTmpFileLen);
+DWORD WINAPI VerInstallFileW(DWORD uFlags, LPWSTR szSrcFileName, LPWSTR szDestFileName, LPWSTR szSrcDir, LPWSTR szDestDir, LPWSTR szCurDir, LPWSTR szTmpFile, PUINT lpuTmpFileLen) {
+    if (oVerInstallFileW) {
+        return oVerInstallFileW(uFlags, szSrcFileName, szDestFileName, szSrcDir, szDestDir, szCurDir, szTmpFile, lpuTmpFileLen);
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return 0;
 }
 
 DWORD WINAPI VerLanguageNameA(DWORD wLang, LPSTR szLang, DWORD nSize) {
-    if (oVerLanguageNameA) return oVerLanguageNameA(wLang, szLang, nSize);
-    if (nSize > 0 && szLang) szLang[0] = '\0';
+    if (oVerLanguageNameA) {
+        return oVerLanguageNameA(wLang, szLang, nSize);
+    }
+
+    if (nSize > 0 && szLang) {
+        szLang[0] = '\0';
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return 0;
 }
 
 DWORD WINAPI VerLanguageNameW(DWORD wLang, LPWSTR szLang, DWORD nSize) {
-    if (oVerLanguageNameW) return oVerLanguageNameW(wLang, szLang, nSize);
-    if (nSize > 0 && szLang) szLang[0] = L'\0';
+    if (oVerLanguageNameW) {
+        return oVerLanguageNameW(wLang, szLang, nSize);
+    }
+
+    if (nSize > 0 && szLang) {
+        szLang[0] = L'\0';
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return 0;
 }
 
 BOOL WINAPI VerQueryValueA(LPCVOID pBlock, LPCSTR lpSubBlock, LPVOID *lplpBuffer, PUINT puLen) {
-    if (oVerQueryValueA) return oVerQueryValueA(pBlock, lpSubBlock, lplpBuffer, puLen);
-    if (lplpBuffer) *lplpBuffer = NULL;
-    if (puLen) *puLen = 0;
+    if (oVerQueryValueA) {
+        return oVerQueryValueA(pBlock, lpSubBlock, lplpBuffer, puLen);
+    }
+
+    if (lplpBuffer) {
+        *lplpBuffer = NULL;
+    }
+
+    if (puLen) {
+        *puLen = 0;
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return FALSE;
 }
 
 BOOL WINAPI VerQueryValueW(LPCVOID pBlock, LPCWSTR lpSubBlock, LPVOID *lplpBuffer, PUINT puLen) {
-    if (oVerQueryValueW) return oVerQueryValueW(pBlock, lpSubBlock, lplpBuffer, puLen);
-    if (lplpBuffer) *lplpBuffer = NULL;
-    if (puLen) *puLen = 0;
+    if (oVerQueryValueW) {
+        return oVerQueryValueW(pBlock, lpSubBlock, lplpBuffer, puLen);
+    }
+
+    if (lplpBuffer) {
+        *lplpBuffer = NULL;
+    }
+
+    if (puLen) {
+        *puLen = 0;
+    }
+
     SetLastError(ERROR_PROC_NOT_FOUND);
     return FALSE;
 }

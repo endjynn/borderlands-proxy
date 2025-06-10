@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.31)
-project(borderlands_proxy C) # Set project language to C ONLY
-
-# CMAKE_CXX_STANDARD is not used for a C project
-# set(CMAKE_CXX_STANDARD 20)
+project(borderlands_proxy C)
 
 set(FINAL_DLL_OUTPUT_NAME "version")
 
@@ -15,7 +12,7 @@ set(MINHOOK_SOURCES
 )
 
 add_library(${PROJECT_NAME} SHARED
-        dllmain.c         # Ensure your main source file is named dllmain.c
+        dllmain.c
         ${MINHOOK_SOURCES}
 )
 

@@ -7,7 +7,6 @@ This fix works by intercepting a specific `WaitForSingleObjectEx` call made by t
 ## Features
 
 * Fixes the game hang on exit.
-* Built using MinHook for API hooking.
 
 ## Usage
 
