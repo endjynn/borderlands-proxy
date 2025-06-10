@@ -14,37 +14,21 @@ static HMODULE g_hRealVersionDll = nullptr;
 
 // Typedefs for all 17 original VerQueryValue functions
 typedef WINBOOL (WINAPI *tGetFileVersionInfoA)(LPCSTR, DWORD, DWORD, LPVOID);
-
 typedef BOOL (WINAPI *tGetFileVersionInfoByHandle)(DWORD, LPCWSTR, DWORD, DWORD, LPVOID);
-
 typedef BOOL (WINAPI *tGetFileVersionInfoExA)(DWORD, LPCSTR, DWORD, DWORD, LPVOID);
-
 typedef BOOL (WINAPI *tGetFileVersionInfoExW)(DWORD, LPCWSTR, DWORD, DWORD, LPVOID);
-
 typedef DWORD (WINAPI *tGetFileVersionInfoSizeA)(LPCSTR, LPDWORD);
-
 typedef DWORD (WINAPI *tGetFileVersionInfoSizeExA)(DWORD, LPCSTR, LPDWORD);
-
 typedef DWORD (WINAPI *tGetFileVersionInfoSizeExW)(DWORD, LPCWSTR, LPDWORD);
-
 typedef DWORD (WINAPI *tGetFileVersionInfoSizeW)(LPCWSTR, LPDWORD);
-
 typedef WINBOOL (WINAPI *tGetFileVersionInfoW)(LPCWSTR, DWORD, DWORD, LPVOID);
-
 typedef DWORD (WINAPI *tVerFindFileA)(DWORD, LPSTR, LPSTR, LPSTR, LPSTR, PUINT, LPSTR, PUINT);
-
 typedef DWORD (WINAPI *tVerFindFileW)(DWORD, LPWSTR, LPWSTR, LPWSTR, LPWSTR, PUINT, LPWSTR, PUINT);
-
 typedef DWORD (WINAPI *tVerInstallFileA)(DWORD, LPSTR, LPSTR, LPSTR, LPSTR, LPSTR, LPSTR, PUINT);
-
 typedef DWORD (WINAPI *tVerInstallFileW)(DWORD, LPWSTR, LPWSTR, LPWSTR, LPWSTR, LPWSTR, LPWSTR, PUINT);
-
 typedef DWORD (WINAPI *tVerLanguageNameA)(DWORD, LPSTR, DWORD);
-
 typedef DWORD (WINAPI *tVerLanguageNameW)(DWORD, LPWSTR, DWORD);
-
 typedef BOOL (WINAPI *tVerQueryValueA)(LPCVOID, LPCSTR, LPVOID *, PUINT);
-
 typedef BOOL (WINAPI *tVerQueryValueW)(LPCVOID, LPCWSTR, LPVOID *, PUINT);
 
 // Pointers to original functions
